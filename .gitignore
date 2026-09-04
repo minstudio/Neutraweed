@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Data / model artifacts (large binary outputs, not source)
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.safetensors
+*.npy
+*.npz
+
+# Logs
+*.log
+
+# Env / secrets
+.env
