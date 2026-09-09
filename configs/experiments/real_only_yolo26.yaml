@@ -1,0 +1,7 @@
+extends: ../base.yaml
+
+name: real_only_yolo26
+
+detector:
+  name: yolo26
+  weights: yolo26m.pt

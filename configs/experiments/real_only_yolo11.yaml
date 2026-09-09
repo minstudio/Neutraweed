@@ -1,0 +1,11 @@
+extends: ../base.yaml
+
+name: real_only_yolo11
+
+detector:
+  name: yolo11
+  weights: yolo11m.pt
+
+dataset:
+  composition: real-only
+  synthetic_ratio: 0.0

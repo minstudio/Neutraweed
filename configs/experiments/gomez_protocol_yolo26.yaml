@@ -1,0 +1,11 @@
+extends: ../base.yaml
+
+detector:
+  name: yolo26
+  weights: yolo26m.pt
+  imgsz: 1536
+  epochs: 200
+  patience: 20
+  optimizer: AdamW
+  lr0: 0.00001
+  batch: 4

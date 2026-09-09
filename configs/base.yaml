@@ -1,0 +1,62 @@
+project: weed-genai
+
+split:
+  protocol: field_holdout
+  test_fields: ["TOMATO_2/Parcela C_alta densidad"]
+  val_fields:  ["TOMATO_2/Parcela B_media densidad"]
+  seed: 1337
+
+tiling:
+  enabled: true
+  size: 1536
+  stride: 1024
+  keep_frac: 0.4
+  drop_empty: true
+
+classes: [SOLNI, POROL, SETVE, CYPRO, ECHCG]
+
+detector:
+  name: yolo11
+  weights: yolo11m.pt
+  imgsz: 1024
+  epochs: 100
+  patience: 20
+  batch: 16
+  optimizer: auto
+  lr0: 0.01
+  seed: 0
+  deterministic: true
+
+dataset:
+  composition: real-only
+  generator: null
+  synthetic_ratio: 0.0
+  matched_size_control: false
+
+annotate:
+  save_overlays: true
+  sam2:
+    model_size: small
+    hf_repo: facebook/sam2-hiera-small
+    device: cuda
+    batch_size: 8
+  birefnet:
+    hf_repo: ZhengPeng7/BiRefNet
+    device: cuda
+    padding: 0.15
+    threshold: 0.5
+  exg:
+    padding: 0.15
+    close_ksize: 5
+    green_floor: 0.0
+
+qc:
+  fid_max: null
+  clip_iqa_min: 0.30
+  dedupe_phash_threshold: 6
+  min_mask_iou: 0.70
+
+tracking:
+  backend: none
+  entity: null
+  project: weed-genai

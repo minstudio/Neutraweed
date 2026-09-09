@@ -1,0 +1,9 @@
+extends: ../base.yaml
+
+name: real_only_rtdetrv2
+
+detector:
+  name: rtdetrv2
+  weights: rtdetr-l.pt
+  optimizer: AdamW
+  lr0: 0.0001

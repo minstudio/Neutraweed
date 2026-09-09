@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper."
+title: "NeutraWeed: synthetic training imagery for weed detection"
+abstract: >-
+  Code for a controlled study of whether the visual fidelity of AI-generated
+  weed imagery predicts the detection accuracy of models trained on it.
+type: software
+license: MIT
+repository-code: "https://github.com/minstudio/Neutraweed"
+authors:
+  - family-names: Zecchin
+    given-names: Leonardo
+    email: leonardoz@live.it
+keywords:
+  - weed detection
+  - synthetic data
+  - diffusion models
+  - object detection
+  - precision agriculture
+preferred-citation:
+  type: article
+  title: "Does Generator Realism in Data Augmentation Improve Weed Detection? A Controlled Study of Synthetic Imagery on a Held-Out Field"
+  authors:
+    - family-names: Zecchin
+      given-names: Leonardo
+  year: 2026

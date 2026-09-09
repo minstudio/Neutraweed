@@ -1,0 +1,13 @@
+extends: ../base.yaml
+
+name: hybrid_sd35_yolo11_r50
+
+detector:
+  name: yolo11
+  weights: yolo11m.pt
+
+dataset:
+  composition: hybrid
+  generator: sd35
+  synthetic_ratio: 0.50
+  matched_size_control: false
