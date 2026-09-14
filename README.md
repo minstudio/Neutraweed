@@ -3,34 +3,9 @@
 Code for a controlled study of whether AI-generated weed imagery has to look
 real to be useful as detector training data.
 
-The short answer is that it does not. Across nine interventions on generator and
-compositor quality, none improved detection and three made it worse. What did
-improve detection was the number of distinct composited scenes, at identical
-synthetic volume.
-
-## Result summary
-
-AP@0.50, mean over the five species, three seeds per arm, evaluated on fields
-held out of training entirely.
-
-| Arm | Test field | Validation field |
-| --- | --- | --- |
-| YOLO26, real imagery only | 0.685 | 0.720 |
-| YOLO26, real + 26,220 synthetic scenes at r = 2.0 | **0.748** | **0.741** |
-| Same, photorealistic generator | 0.722 | 0.741 |
-
-Two findings shape how those numbers should be read.
-
-**Scene count, not fidelity.** At matched synthetic volume, 26,220 distinct
-scenes beat 2,500 scenes repeated 10.5 times by 0.013 AP (p = 0.001), on every
-seed. Every intervention that improved how a scene *looks* moved detection by
-less than the spread between random seeds.
-
-**The benchmark caps precision.** The reference annotates only the inter-row
-area, so correct detections on unannotated plants score as false positives.
-Correcting for this raises both arms and shrinks the synthetic gain from 0.063
-to between 0.045 and 0.030, because the real-only model gains more from the
-correction than the hybrid does.
+The short answer is that it does not. Interventions on generator and compositor
+quality did not produce a consistent improvement in detection, while increasing
+the number of distinct composited scenes did, at identical synthetic volume.
 
 ## Layout
 
@@ -107,23 +82,11 @@ labelled only in the 2021 season, so keeping it would introduce a cross-season
 annotation inconsistency. The order is frozen in `src/common/classes.py`: changing
 it invalidates every checkpoint and label file.
 
-### Split
-
-Whole fields are held out, so every reported figure measures generalisation to a
-field the detector has never seen.
-
-| Partition | Fields | Photos | Tiles | Instances |
-| --- | --- | --- | --- | --- |
-| Train | 2021 fields + Finca Santa Amalia (2022) | 1,153 | 13,110 | 42,177 |
-| Validation | Parcela B (2022) | 28 | 527 | 2,870 |
-| Test | Parcela C (2022) | 27 | 532 | 3,897 |
-
-Training instances per species: SOLNI 14,820, POROL 3,965, SETVE 4,336,
-CYPRO 8,367, ECHCG 10,689.
-
-Both seasons stay in training because *Echinochloa crus-galli* is almost absent
-from the 2021 imagery. Tiles are 1536 px at stride 1024, a box kept when at
-least 40 per cent of it falls inside the tile.
+The split holds out whole fields, so every reported figure measures
+generalisation to a field the detector has never seen. Both seasons stay in
+training because *Echinochloa crus-galli* is almost absent from the 2021
+imagery. The fields assigned to validation and testing, and the tiling
+parameters, are set in `configs/base.yaml`.
 
 ## Pipeline
 
@@ -143,7 +106,7 @@ backgrounds drawn from the training fields. No pixel from the validation or test
 parcels reaches the generator at any stage.
 
 **D. Assemble a training set.** `--ratio` is synthetic entries per real tile, so
-`--ratio 2.00` against 13,110 real tiles requests 26,220 synthetic entries.
+`--ratio 2.00` requests two synthetic entries for every real tile.
 `--strict-unique` refuses to build when that would require repeating pool
 entries, which upweights images rather than adding information.
 
@@ -180,9 +143,9 @@ python -m src.detect.train_yolo --config experiments/yolo26.yaml \
 Interrupted runs resume from `last.pt`; a checkpoint truncated by a walltime
 kill is detected and discarded rather than crashing the array cell.
 
-**F. Evaluate.** Evaluation is two steps, because the test field is 27 photos
-and roughly 530 tiles and cannot be made larger without breaking the split. The
-detections are cached once on GPU, then re-analysed for free on CPU.
+**F. Evaluate.** Evaluation is two steps, because the test field is small and
+cannot be made larger without breaking the split. The detections are cached once
+on GPU, then re-analysed for free on CPU.
 
 ```bash
 python scripts/cache_preds.py --pattern 'hybrid_yolo26_sd35cut_lora_v2b_r200_seed*' --split test
@@ -204,12 +167,12 @@ python scripts/ap_analysis.py --runs 'hybrid_yolo26_sd35cut_lora_v2b_r200_seed*'
 python scripts/error_breakdown.py --runs 'realonly_yolo26_seed*' --split test
 ```
 
-Options that carry the paper's measurement decisions:
+Options that carry the measurement decisions:
 
 | Flag | Effect |
 | --- | --- |
-| `--bins` | object-size boundaries in px; default `64 128` |
-| `--boot` | bootstrap resamples, default 1000; `0` disables |
+| `--bins` | object-size boundaries in px |
+| `--boot` | bootstrap resamples; `0` disables |
 | `--match-mode ioa` | match on intersection over ground-truth area, used for *Cyperus rotundus* |
 | `--fp-bkg-verified P` | credit a fraction `P` of background false positives as real plants |
 | `--drop-overlap F` | exclude crowded tiles from scoring; must match `--max-overlap` at build time |
@@ -217,8 +180,7 @@ Options that carry the paper's measurement decisions:
 
 `src/eval` is the lighter path: `metrics` wraps Ultralytics `val` and appends a
 row per run to `results/tables/metrics.csv`, and `stats` runs a paired t-test
-and a Wilcoxon signed-rank test over that file across seeds. The intervals in
-the paper come from `scripts/ap_analysis.py`, not from these.
+and a Wilcoxon signed-rank test over that file across seeds.
 
 The whole sweep can be driven end to end. `--dry-run` prints the plan without
 training, and `--build-only` assembles the datasets so a job array can train
@@ -235,7 +197,7 @@ python scripts/run_sweep.py --generator sd35cut_lora_v2b --detector yolo26 \
 ## Not yet in this repository
 
 A dependency manifest pinning at least `ultralytics==8.4.68`, since the
-optimiser selection described above is version-specific.
+optimiser selection described below is version-specific.
 
 ## Measurement conventions
 
@@ -246,8 +208,8 @@ whenever results from it are reported.
 often annotated as several boxes. A prediction covering the whole clump then
 overlaps each box weakly and scores as a false positive while the annotations
 score as missed. Scoring this species on intersection over the *ground-truth
-area* instead of intersection over union raises its AP from 0.586 to 0.699, with
-no change to the model.
+area* instead of intersection over union raises its AP substantially, with no
+change to the model.
 
 **Annotation is restricted to the inter-row area.** Plants outside it are real
 but unlabelled, so detections on them count as false positives. Blind inspection
